@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "445098151322",
+    "project_id": "pim-msaware",
+    "storage_bucket": "pim-msaware.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445098151322:android:6854f495c57b1f505e7e23",
+        "android_client_info": {
+          "package_name": "com.example.pim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "445098151322-hfd4iglag9h5qhcokobhcut63th2jq4t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.pim",
+            "certificate_hash": "8c30d5d46d8625bf41309710836ed396de5497fc"
+          }
+        },
+        {
+          "client_id": "445098151322-88osaq8qm3i5jck2shgab6lf4kvorjfi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvCPjVj7609MWY_97yypb-nObxJwuUYDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "445098151322-88osaq8qm3i5jck2shgab6lf4kvorjfi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "445098151322-7cau61on645q0ao5fa3qjqnpefdl42nc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.pim"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
