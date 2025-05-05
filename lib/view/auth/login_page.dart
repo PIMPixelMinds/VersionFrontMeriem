@@ -212,21 +212,32 @@ const SizedBox(height: 10),
     );
   }
 
-  Widget _buildSocialButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        GestureDetector(
-          onTap: () {
-            final authViewModel =
-                Provider.of<AuthViewModel>(context, listen: false);
-            authViewModel.signInWithGoogle(context);
-          },
-          child: _buildSocialButton("assets/google.png"),
+ Widget _buildSocialButtons() {
+  final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      GestureDetector(
+        onTap: () {
+          authViewModel.signInWithGoogle(context);
+        },
+        child: _buildSocialButton("assets/google.png"),
+      ),
+      const SizedBox(width: 16),
+      GestureDetector(
+        onTap: () {
+          authViewModel.signInWithApple(context);
+        },
+        child: _buildSocialButton(
+          Theme.of(context).brightness == Brightness.dark
+              ? "assets/Logo - SIWA - Left-aligned - White - Medium.png"
+              : "assets/Logo - SIWA - Left-aligned - Black - Medium.png",
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildSocialButton(String asset) {
     return Container(

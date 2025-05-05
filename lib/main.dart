@@ -61,7 +61,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     );
   }
   debugPrint(
-      "📥 [BG] Message: ${message.notification?.title} - ${message.notification?.body}");
+      "[BG] Message: ${message.notification?.title} - ${message.notification?.body}");
 }
 
 Future<void> main() async {
@@ -72,10 +72,10 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      debugPrint("✅ Firebase initialized");
+      debugPrint("Firebase initialized");
     }
   } catch (e) {
-    debugPrint("❌ Firebase init failed: $e");
+    debugPrint("Firebase init failed: $e");
   }
 
   await _setupNotifications();
@@ -117,7 +117,7 @@ Future<void> _setupNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(
     initSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      debugPrint('🔔 Notification tapped: ${response.payload}');
+      debugPrint('Notification tapped: ${response.payload}');
     },
   );
 

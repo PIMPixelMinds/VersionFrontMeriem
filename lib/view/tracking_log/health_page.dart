@@ -84,7 +84,7 @@ class _HealthPageState extends State<HealthPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.network(
-                  "http://192.168.73.201:3000${item['imageUrl']}",
+                  "http://192.168.100.7:3000${item['imageUrl']}",
                   width: 250,
                   height: 250,
               

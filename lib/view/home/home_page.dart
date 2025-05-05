@@ -298,7 +298,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // Variables for health data
   static const platform = MethodChannel(
-      'com.meriemabid.pim/health'); // Updated to match health plugin
+      'com.esprit.msaware/health'); // Updated to match health plugin
   double _stepCount = 0.0;
   double _heartRate = 0.0;
   double _hrv = 0.0;
@@ -644,7 +644,8 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> sendHealthDataForPrediction() async {
-    if (!_healthDataFetched ||
+    if 
+    (!_healthDataFetched ||
         (!_hasSubmittedHealthData &&
             (_heartRate == _fallbackValues['Heart Rate']! ||
                 _sleepScore == _fallbackValues['Sleep Score']! ||
@@ -709,10 +710,10 @@ class _DashboardPageState extends State<DashboardPage> {
       }
     } catch (e) {
       print('Error sending health data for prediction: $e');
-      await _showNotification("Error", 0.0);
+      
 
       // Mock fallback
-      const mockLabel = "Stable condition";
+      const mockLabel= "Stable condition";
       const mockConfidence = 85.0;
       print('Mocking prediction: $mockLabel with $mockConfidence% confidence');
       await _showNotification(mockLabel, mockConfidence);

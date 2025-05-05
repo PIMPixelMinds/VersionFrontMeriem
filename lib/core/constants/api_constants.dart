@@ -1,8 +1,9 @@
 class ApiConstants {
-  static const String baseUrl = "http://192.168.100.7:3000";
+  static const String baseUrl = "http://172.205.131.226:3000";
   static const String loginEndpoint = "$baseUrl/auth/login";
   static const String signupEndpoint = "$baseUrl/auth/signup";
   static const String googleLoginEndpoint = "$baseUrl/auth/google/login";
+  static const String appleLoginEndpoint = "$baseUrl/auth/apple-login";
   static const String googleRedirectEndpoint = "$baseUrl/auth/google/redirect";
   static const String forgotPasswordEndpoint = "$baseUrl/auth/forgot-password";
   static const String verifyOtpEndpoint = "$baseUrl/auth/verify-reset-code";

@@ -25,39 +25,40 @@ class AuthRepository {
   }
 
 /********************************/
-Future<Map<String, dynamic>?> googleLogin(String googleToken) async {
-  final url = Uri.parse('${ApiConstants.baseUrl}/auth/google/login');
-  final SharedPrefsService _prefsService = SharedPrefsService(); // ⬅️ Init here
+  Future<Map<String, dynamic>?> googleLogin(String googleToken) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/google/login');
+    final SharedPrefsService _prefsService =
+        SharedPrefsService(); // ⬅️ Init here
 
-  try {
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"token": googleToken}),
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-
-      final accessToken = responseData['token'];
-      final refreshToken = responseData['refreshToken'] ?? '';
-
-      if (accessToken != null && accessToken.isNotEmpty) {
-        await _prefsService.saveTokens(accessToken, refreshToken); // ⬅️ Save tokens here
-        print("✅ Tokens saved after Google login");
-      }
-
-      return responseData;
-    } else {
-      throw Exception(
-        jsonDecode(response.body)["message"] ?? "Google login failed",
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"token": googleToken}),
       );
-    }
-  } catch (e) {
-    throw Exception("Google login error: $e");
-  }
-}
 
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+
+        final accessToken = responseData['token'];
+        final refreshToken = responseData['refreshToken'] ?? '';
+
+        if (accessToken != null && accessToken.isNotEmpty) {
+          await _prefsService.saveTokens(
+              accessToken, refreshToken); // ⬅️ Save tokens here
+          print("✅ Tokens saved after Google login");
+        }
+
+        return responseData;
+      } else {
+        throw Exception(
+          jsonDecode(response.body)["message"] ?? "Google login failed",
+        );
+      }
+    } catch (e) {
+      throw Exception("Google login error: $e");
+    }
+  }
 
   /********************************/
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
@@ -129,8 +130,7 @@ Future<Map<String, dynamic>?> googleLogin(String googleToken) async {
     }
   }
 
-
- Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+  Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
     final url = Uri.parse(ApiConstants.verifyOtpEndpoint);
     print("🔵 Appel API : $url avec email=$email et otp=$otp");
 
@@ -173,7 +173,7 @@ Future<Map<String, dynamic>?> googleLogin(String googleToken) async {
     }
   }
 
-Future<void> resetPassword(String email, String newPassword) async {
+  Future<void> resetPassword(String email, String newPassword) async {
     final url = Uri.parse("${ApiConstants.resetPasswordEndpoint}/$email");
 
     final response = await http.put(
@@ -377,5 +377,29 @@ Future<void> resetPassword(String email, String newPassword) async {
     }
 
     return token;
+  }
+
+  Future<Map<String, dynamic>?> appleLogin(String identityToken) async {
+    final url = Uri.parse(ApiConstants.appleLoginEndpoint);
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"identityToken": identityToken}),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = jsonDecode(response.body);
+        await SharedPrefsService().saveTokens(
+          responseData['token'],
+          responseData['refreshToken'] ?? '',
+        );
+        return responseData;
+      } else {
+        throw Exception(
+            'Apple login failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      throw Exception("Apple login error: $e");
+    }
   }
 }

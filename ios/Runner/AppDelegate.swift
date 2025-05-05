@@ -17,8 +17,8 @@ import FirebaseMessaging // Add this
     application.registerForRemoteNotifications()
 
     let controller = window?.rootViewController as! FlutterViewController
-    let healthChannel = FlutterMethodChannel(name: "com.meriemabid.pim/health", binaryMessenger: controller.binaryMessenger)
-    print("Platform channel initialized: com.meriemabid.pim/health")
+    let healthChannel = FlutterMethodChannel(name: "com.esprit.msaware/health", binaryMessenger: controller.binaryMessenger)
+    print("Platform channel initialized: com.esprit.msaware/health")
 
     healthChannel.setMethodCallHandler { (call: FlutterMethodCall, result: @escaping FlutterResult) in
       print("Received method call: \(call.method)")

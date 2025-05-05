@@ -9,60 +9,65 @@ import '../data/repositories/shared_prefs_service.dart';
 import '../view/auth/otp_verification_page.dart';
 import '../view/auth/reset_password_bottom_sheet.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  // 🔥 IMPORTANT
   final AuthRepository _authRepository = AuthRepository();
-    final SharedPrefsService _prefsService = SharedPrefsService();
+  final SharedPrefsService _prefsService = SharedPrefsService();
 
   bool isLoading = false;
   Map<String, dynamic>? userProfile; // Store the user profile data
- final GoogleSignIn _googleSignIn = GoogleSignIn(
-  clientId: Platform.isIOS
-      ? '815846323450-55fto74973fqkcfsaq9ajhfgkqkr8402.apps.googleusercontent.com'
-      : Platform.isAndroid
-      ? null
-      : '815846323450-npr8cbi7b8n7c1op9pq5m1i570k21hh7.apps.googleusercontent.com',
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: Platform.isIOS
+        ? '815846323450-55fto74973fqkcfsaq9ajhfgkqkr8402.apps.googleusercontent.com'
+        : Platform.isAndroid
+            ? null
+            : '815846323450-npr8cbi7b8n7c1op9pq5m1i570k21hh7.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
+    forceCodeForRefreshToken: true,
+    signInOption: SignInOption.standard,
+  );
+  Future<void> signInWithGoogle(BuildContext context) async {
+    try {
+      await _googleSignIn.disconnect(); // Fix: fully clear Google session
+      await _googleSignIn.signOut(); // optional safety
 
-  scopes: ['email', 'profile'],
-  forceCodeForRefreshToken: true,
-  signInOption: SignInOption.standard,
-);
-Future<void> signInWithGoogle(BuildContext context) async {
-  try {
-    await _googleSignIn.disconnect(); // ✅ Fix: fully clear Google session
-    await _googleSignIn.signOut();    // optional safety
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) throw Exception('Connexion annulée');
 
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw Exception('Connexion annulée');
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+      if (idToken == null)
+        throw Exception('Google authentication failed: Missing ID token');
 
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-    final String? idToken = googleAuth.idToken;
-    if (idToken == null) throw Exception('Google authentication failed: Missing ID token');
+      final data = await _authRepository.googleLogin(idToken);
+      if (data == null || !data.containsKey('token'))
+        throw Exception('Token invalide reçu du backend');
 
-    final data = await _authRepository.googleLogin(idToken);
-    if (data == null || !data.containsKey('token')) throw Exception('Token invalide reçu du backend');
+      await _prefsService.saveTokens(data['token'], data['refreshToken'] ?? '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connexion Google réussie!')),
+      );
 
-    await _prefsService.saveTokens(data['token'], data['refreshToken'] ?? '');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connexion Google réussie!')),
-    );
-
-    Navigator.pushReplacementNamed(context, '/home');
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Erreur d'authentification Google: $e")),
-    );
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur d'authentification Google: $e")),
+      );
+    }
   }
-}
+
 /********************************/
-   Future<void> login(BuildContext context, String email, String password) async {
+  Future<void> login(
+      BuildContext context, String email, String password) async {
     final localizations = AppLocalizations.of(context)!;
     try {
       isLoading = true;
       notifyListeners();
       final data = await _authRepository.loginUser(email, password);
-      if (data == null || !data.containsKey("token")) throw Exception("Invalid token received");
+      if (data == null || !data.containsKey("token"))
+        throw Exception("Invalid token received");
 
       await _prefsService.saveTokens(data["token"], data["refreshToken"] ?? '');
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -70,13 +75,13 @@ Future<void> signInWithGoogle(BuildContext context) async {
 
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
-
 
   Future<bool> isLoggedIn() async => await _prefsService.isLoggedIn();
 
@@ -90,19 +95,23 @@ Future<void> signInWithGoogle(BuildContext context) async {
 
 /********************************/
   // Rafraîchit le token avec le refresh token
-   Future<void> refreshToken(BuildContext context) async {
+  Future<void> refreshToken(BuildContext context) async {
     final localizations = AppLocalizations.of(context)!;
     try {
       isLoading = true;
       notifyListeners();
       final refreshToken = await _prefsService.getRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) throw Exception("No refresh token available. Please log in again.");
+      if (refreshToken == null || refreshToken.isEmpty)
+        throw Exception("No refresh token available. Please log in again.");
       final response = await _authRepository.refreshToken(refreshToken);
-      await _prefsService.saveTokens(response["token"], response["refreshToken"]);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(localizations.tokenRefreshedSuccessfully)));
+      await _prefsService.saveTokens(
+          response["token"], response["refreshToken"]);
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(localizations.tokenRefreshedSuccessfully)));
     } catch (e) {
       Navigator.pushReplacementNamed(context, "/login");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       isLoading = false;
       notifyListeners();
@@ -111,47 +120,47 @@ Future<void> signInWithGoogle(BuildContext context) async {
 /********************************/
 
   Future<void> registerUser(
-  BuildContext context,
-  String fullName,
-  String email,
-  String password,
-) async {
-  final localizations = AppLocalizations.of(context)!;
-  try {
-    isLoading = true;
-    notifyListeners();
+    BuildContext context,
+    String fullName,
+    String email,
+    String password,
+  ) async {
+    final localizations = AppLocalizations.of(context)!;
+    try {
+      isLoading = true;
+      notifyListeners();
 
-    final response = await _authRepository.registerUser(
-      fullName: fullName,
-      email: email,
-      password: password,
-    );
+      final response = await _authRepository.registerUser(
+        fullName: fullName,
+        email: email,
+        password: password,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.registrationSuccessful)),
-);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(localizations.registrationSuccessful)),
+      );
 
-    Navigator.pushReplacementNamed(context, "/login");
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString())),
-    );
-  } finally {
-    isLoading = false;
-    notifyListeners();
+      Navigator.pushReplacementNamed(context, "/login");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
-}
 
 /********************************/
 
   Future<void> sendForgotPasswordRequest(
       BuildContext context, String email) async {
-        final localizations = AppLocalizations.of(context)!;
+    final localizations = AppLocalizations.of(context)!;
     try {
       if (email.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.pleaseEnterAnEmail)),
-);
+          SnackBar(content: Text(localizations.pleaseEnterAnEmail)),
+        );
         return;
       }
 
@@ -161,8 +170,8 @@ Future<void> signInWithGoogle(BuildContext context) async {
       final response = await _authRepository.sendForgotPasswordRequest(email);
 
       ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.registrationSuccessful)),
-);
+        SnackBar(content: Text(localizations.registrationSuccessful)),
+      );
 
       Navigator.pop(context);
       // Ouvrir le bottom sheet de vérification OTP
@@ -190,8 +199,8 @@ Future<void> signInWithGoogle(BuildContext context) async {
       if (response.containsKey("message") &&
           response["message"] == "Code verified successfully") {
         ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.otpVerifiedSuccessfully)),
-);
+          SnackBar(content: Text(localizations.otpVerifiedSuccessfully)),
+        );
 
         isLoading = false;
         notifyListeners();
@@ -232,8 +241,8 @@ Future<void> signInWithGoogle(BuildContext context) async {
     try {
       await _authRepository.resendOtp(email);
       ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.resetCodeSentToYourEmail)),
-);
+        SnackBar(content: Text(localizations.resetCodeSentToYourEmail)),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -259,7 +268,7 @@ Future<void> signInWithGoogle(BuildContext context) async {
 
   Future<void> resetPassword(
       BuildContext context, String email, String newPassword) async {
-        final localizations = AppLocalizations.of(context)!;
+    final localizations = AppLocalizations.of(context)!;
     try {
       isLoading = true;
       notifyListeners();
@@ -267,8 +276,8 @@ Future<void> signInWithGoogle(BuildContext context) async {
       await _authRepository.resetPassword(email, newPassword);
 
       ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.passwordResetSuccess)),
-);
+        SnackBar(content: Text(localizations.passwordResetSuccess)),
+      );
 
       Navigator.pop(context); // Close the reset password bottom sheet or dialog
     } catch (e) {
@@ -281,18 +290,19 @@ Future<void> signInWithGoogle(BuildContext context) async {
     }
   }
 
-
   //************************************************/
   Future<void> getProfile(BuildContext context) async {
     try {
       isLoading = true;
       notifyListeners();
       final token = await _prefsService.getAccessToken();
-      if (token == null) throw Exception("No token found. Please log in again.");
+      if (token == null)
+        throw Exception("No token found. Please log in again.");
       userProfile = await _authRepository.getProfile(token);
       WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       isLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
@@ -301,62 +311,62 @@ Future<void> signInWithGoogle(BuildContext context) async {
 
 /************************************************************/
   Future<void> updateProfile({
-  required BuildContext context,
-  String? newName,
-  String? newEmail,
-  String? newBirthday,
-  String? newGender,
-  int? newPhone,
-  String? newCareGiverEmail,
-  int? newCareGiverPhone,
-  String? newCareGiverName,
-  String? newDiagnosis,
-  String? newType,
-  String? newMedicalReportPath,
-}) async {
-  final localizations = AppLocalizations.of(context)!;
-  try {
-    isLoading = true;
-    notifyListeners();
+    required BuildContext context,
+    String? newName,
+    String? newEmail,
+    String? newBirthday,
+    String? newGender,
+    int? newPhone,
+    String? newCareGiverEmail,
+    int? newCareGiverPhone,
+    String? newCareGiverName,
+    String? newDiagnosis,
+    String? newType,
+    String? newMedicalReportPath,
+  }) async {
+    final localizations = AppLocalizations.of(context)!;
+    try {
+      isLoading = true;
+      notifyListeners();
 
-    // Retrieve the token from SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token");
+      // Retrieve the token from SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
 
-    if (token == null) {
-      throw Exception("No token found. Please log in again.");
+      if (token == null) {
+        throw Exception("No token found. Please log in again.");
+      }
+
+      // Appel au repository avec tous les paramètres optionnels
+      final response = await _authRepository.updateProfile(
+        token: token,
+        newName: newName,
+        newEmail: newEmail,
+        newBirthday: newBirthday,
+        newGender: newGender,
+        newPhone: newPhone,
+        newCareGiverEmail: newCareGiverEmail,
+        newCareGiverPhone: newCareGiverPhone,
+        newCareGiverName: newCareGiverName,
+        newDiagnosis: newDiagnosis,
+        newType: newType,
+        newMedicalReportPath: newMedicalReportPath,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(localizations.profileUpdatedSuccessfully)),
+      );
+      notifyListeners();
+      Navigator.pushReplacementNamed(context, '/profile');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
-
-    // Appel au repository avec tous les paramètres optionnels
-    final response = await _authRepository.updateProfile(
-      token: token,
-      newName: newName,
-      newEmail: newEmail,
-      newBirthday: newBirthday,
-      newGender: newGender,
-      newPhone: newPhone,
-      newCareGiverEmail: newCareGiverEmail,
-      newCareGiverPhone: newCareGiverPhone,
-      newCareGiverName: newCareGiverName,
-      newDiagnosis: newDiagnosis,
-      newType: newType,
-      newMedicalReportPath: newMedicalReportPath,
-    );
-
-ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.profileUpdatedSuccessfully)),
-);
-    notifyListeners();
-    Navigator.pushReplacementNamed(context, '/profile');
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString())),
-    );
-  } finally {
-    isLoading = false;
-    notifyListeners();
   }
-}
 
 /************************************************************/
   Future<void> changePassword({
@@ -386,8 +396,8 @@ ScaffoldMessenger.of(context).showSnackBar(
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.registrationSuccessful)),
-);
+        SnackBar(content: Text(localizations.registrationSuccessful)),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -424,8 +434,8 @@ ScaffoldMessenger.of(context).showSnackBar(
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
-  SnackBar(content: Text(localizations.emailUpdatedSuccessfully)),
-);
+        SnackBar(content: Text(localizations.emailUpdatedSuccessfully)),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
@@ -437,23 +447,27 @@ ScaffoldMessenger.of(context).showSnackBar(
   }
 
   bool isProfileIncomplete() {
-  final profile = userProfile;
+    final profile = userProfile;
 
-  if (profile == null) return true; // Aucun profil => incomplet
+    if (profile == null) return true; // Aucun profil => incomplet
 
-  return (profile['fullName'] == null || profile['fullName'].toString().isEmpty) ||
-         (profile['email'] == null || profile['email'].toString().isEmpty) ||
-         (profile['birthday'] == null) ||
-         (profile['gender'] == null || profile['gender'].toString().isEmpty) ||
-         (profile['phone'] == null) ||
-         (profile['careGiverEmail'] == null || profile['careGiverEmail'].toString().isEmpty) ||
-         (profile['careGiverPhone'] == null) ||
-         (profile['careGiverName'] == null || profile['careGiverName'].toString().isEmpty) ||
-         (profile['diagnosis'] == null || profile['diagnosis'].toString().isEmpty) ||
-         (profile['type'] == null || profile['type'].toString().isEmpty) ||
-         (profile['medicalReport'] == null || profile['medicalReport'].toString().isEmpty);
-}
-
+    return (profile['fullName'] == null ||
+            profile['fullName'].toString().isEmpty) ||
+        (profile['email'] == null || profile['email'].toString().isEmpty) ||
+        (profile['birthday'] == null) ||
+        (profile['gender'] == null || profile['gender'].toString().isEmpty) ||
+        (profile['phone'] == null) ||
+        (profile['careGiverEmail'] == null ||
+            profile['careGiverEmail'].toString().isEmpty) ||
+        (profile['careGiverPhone'] == null) ||
+        (profile['careGiverName'] == null ||
+            profile['careGiverName'].toString().isEmpty) ||
+        (profile['diagnosis'] == null ||
+            profile['diagnosis'].toString().isEmpty) ||
+        (profile['type'] == null || profile['type'].toString().isEmpty) ||
+        (profile['medicalReport'] == null ||
+            profile['medicalReport'].toString().isEmpty);
+  }
 
   Future<void> deleteProfile(BuildContext context) async {
     try {
@@ -463,14 +477,55 @@ ScaffoldMessenger.of(context).showSnackBar(
       await _prefsService.clearAll();
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
+
+  Future<String?> signInWithApple(BuildContext context) async {
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        webAuthenticationOptions: WebAuthenticationOptions(
+          clientId: 'com.esprit.msaware',
+          redirectUri: Uri.parse(
+              'https://version-front-meriem.vercel.app/auth/apple/callback'),
+        ),
+      );
+
+      debugPrint('🔑 Apple Sign-In Credential:');
+      debugPrint(
+          'identityToken: ${credential.identityToken?.substring(0, 100)}...');
+      debugPrint('authorizationCode: ${credential.authorizationCode}');
+      debugPrint('email: ${credential.email}');
+      debugPrint('fullName: ${credential.givenName} ${credential.familyName}');
+
+      print('Identity Token: ${credential.identityToken}');
+      if (credential.identityToken == null) {
+        throw Exception('Missing identity token from Apple');
+      }
+
+      final data = await _authRepository.appleLogin(credential.identityToken!);
+
+      if (data == null || !data.containsKey('token')) {
+        throw Exception('Invalid response from backend');
+      }
+
+// Save tokens
+      await _prefsService.saveTokens(data['token'], data['refreshToken'] ?? '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connexion Apple réussie!')),
+      );
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      print('Error with Apple Sign-In: $e');
+      return null;
+    }
+  }
 }
-
-
-
-
