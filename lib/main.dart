@@ -54,7 +54,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 /// Firebase background handler
-Future<void> _firebaseMessagingBackgroundHandler(final RemoteMessage message) async {
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -70,10 +70,9 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      debugPrint("✅ Firebase initialized");
     }
   } catch (e) {
-    debugPrint("⚠️ Firebase init failed: $e");
+    debugPrint("Firebase initialization error: $e");
   }
 
   await _setupNotifications();
