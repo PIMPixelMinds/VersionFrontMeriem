@@ -126,7 +126,9 @@
   "@gameTimeLeft": {
     "description": "Displayed during the memory game to show remaining seconds",
     "placeholders": {
-      "seconds": {}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "getReady": "Préparez-vous !",
@@ -239,8 +241,8 @@
 "@stockFlow": {
   "description": "Stock change display",
   "placeholders": {
-    "previous": {},
-    "newValue": {}
+    "previous": {"type": "Object"},
+    "newValue": {"type": "Object"}
   }
 },
   "skipDose": "Sauter la dose",
@@ -267,8 +269,8 @@
   "@reminderYouShouldHaveTaken": {
     "description": "Notification message for missed medication",
     "placeholders": {
-      "medicationName": {},
-      "time": {}
+      "medicationName": {"type": "Object"},
+      "time": {"type": "Object"}
     }
   },
   "addItem": "Ajouter",

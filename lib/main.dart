@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -52,7 +53,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// Firebase background message handler
+/// Firebase background handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
@@ -71,10 +72,10 @@ Future<void> main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      debugPrint("Firebase initialized");
+      debugPrint("✅ Firebase initialized");
     }
   } catch (e) {
-    debugPrint("Firebase init failed: $e");
+    debugPrint("⚠️ Firebase init failed: $e");
   }
 
   await _setupNotifications();
@@ -117,7 +118,7 @@ Future<void> _setupNotifications() async {
   await flutterLocalNotificationsPlugin.initialize(
     initSettings,
     onDidReceiveNotificationResponse: (NotificationResponse response) async {
-      debugPrint('Notification tapped: ${response.payload}');
+      debugPrint('🔔 Notification tapped: ${response.payload}');
     },
   );
 
@@ -157,42 +158,28 @@ Future<void> _setupNotifications() async {
   });
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+///
+/// 🧩 Modified MyApp to support mock injection for tests
+///
+class MyApp extends StatelessWidget {
+  final FirebaseApi? firebaseApi;
+  final FirebaseHistoriqueApi? firebaseHistoriqueApi;
+  final FirebaseAuthApi? firebaseAuthApi;
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  bool _firebaseApisReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initFirebaseApis();
-  }
-
-  Future<void> _initFirebaseApis() async {
-    // Initialize your Firebase APIs safely after Firebase is ready
-    FirebaseApi().initNotifications('temp-id');
-    FirebaseHistoriqueApi().initNotifications('temp-id');
-    FirebaseAuthApi().initNotifications('temp-id');
-
-    setState(() {
-      _firebaseApisReady = true;
-    });
-  }
+  const MyApp({
+    super.key,
+    this.firebaseApi,
+    this.firebaseHistoriqueApi,
+    this.firebaseAuthApi,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (!_firebaseApisReady) {
-      return const MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
+    // Initialize Firebase-related APIs
+    (firebaseApi ?? FirebaseApi()).initNotifications('temp-id');
+    (firebaseHistoriqueApi ?? FirebaseHistoriqueApi())
+        .initNotifications('temp-id');
+    (firebaseAuthApi ?? FirebaseAuthApi()).initNotifications('temp-id');
 
     return MultiProvider(
       providers: [
@@ -233,7 +220,8 @@ class _MyAppState extends State<MyApp> {
             '/register': (context) => RegisterPage(),
             '/home': (context) => const HomePage(),
             '/passwordSecurity': (context) => const PasswordSecurityPage(),
-            '/personalInformation': (context) => const PersonalInformationPage(),
+            '/personalInformation': (context) =>
+                const PersonalInformationPage(),
             '/medicalHistory': (context) => const MedicalHistoryPage(),
             '/primaryCaregiver': (context) => const PrimaryCaregiverPage(),
             '/addAppointment': (context) => const AddAppointmentSheet(),

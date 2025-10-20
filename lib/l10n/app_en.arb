@@ -126,7 +126,9 @@
   "@gameTimeLeft": {
     "description": "Displayed during the memory game to show remaining seconds",
     "placeholders": {
-      "seconds": {}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "getReady": "Get Ready!",
@@ -270,8 +272,8 @@
 "@stockFlow": {
   "description": "Stock change display",
   "placeholders": {
-    "previous": {},
-    "newValue": {}
+    "previous": {"type": "Object"},
+    "newValue": {"type": "Object"}
   }
 },
   "add": "Add",
