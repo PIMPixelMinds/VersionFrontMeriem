@@ -184,7 +184,7 @@ Text(
     final locale = AppLocalizations.of(context)!;
     return Center(
       child: Text(
-  locale.gameTimeLeft('$_remainingTime'),
+  locale.gameTimeLeft('$_remainingTime' as int),
   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
 ),
     );
