@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -53,7 +52,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// Firebase background handler
+/// Firebase background message handler
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
@@ -79,6 +78,7 @@ Future<void> main() async {
   }
 
   await _setupNotifications();
+
   runApp(const MyApp());
 }
 
@@ -157,15 +157,42 @@ Future<void> _setupNotifications() async {
   });
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Initialize Firebase-related APIs
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _firebaseApisReady = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initFirebaseApis();
+  }
+
+  Future<void> _initFirebaseApis() async {
+    // Initialize your Firebase APIs safely after Firebase is ready
     FirebaseApi().initNotifications('temp-id');
     FirebaseHistoriqueApi().initNotifications('temp-id');
     FirebaseAuthApi().initNotifications('temp-id');
+
+    setState(() {
+      _firebaseApisReady = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_firebaseApisReady) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
 
     return MultiProvider(
       providers: [
@@ -206,15 +233,14 @@ class MyApp extends StatelessWidget {
             '/register': (context) => RegisterPage(),
             '/home': (context) => const HomePage(),
             '/passwordSecurity': (context) => const PasswordSecurityPage(),
-            '/personalInformation': (context) =>
-                const PersonalInformationPage(),
+            '/personalInformation': (context) => const PersonalInformationPage(),
             '/medicalHistory': (context) => const MedicalHistoryPage(),
             '/primaryCaregiver': (context) => const PrimaryCaregiverPage(),
             '/addAppointment': (context) => const AddAppointmentSheet(),
             '/displayAppointment': (context) => const AppointmentPage(),
             '/notification_screen': (context) => const NotificationPage(),
             '/medications': (context) => const MedicationHomeScreen(),
-            '/add_medication': (context) =>  AddMedicationScreen(),
+            '/add_medication': (context) => AddMedicationScreen(),
             '/medication_notifications': (context) =>
                 const MedicationNotificationScreen(),
             '/medication_detail': (context) => MedicationDetailScreen(
