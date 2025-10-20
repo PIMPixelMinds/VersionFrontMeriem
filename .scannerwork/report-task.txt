@@ -2,5 +2,5 @@ projectKey=MsAware
 serverUrl=http://localhost:9000
 serverVersion=25.10.0.114319
 dashboardUrl=http://localhost:9000/dashboard?id=MsAware
-ceTaskId=fca308f0-b4aa-4234-b9d1-9d1a5c71efaa
-ceTaskUrl=http://localhost:9000/api/ce/task?id=fca308f0-b4aa-4234-b9d1-9d1a5c71efaa
+ceTaskId=72518d34-5dcd-44e2-bd9e-ed53e062df64
+ceTaskUrl=http://localhost:9000/api/ce/task?id=72518d34-5dcd-44e2-bd9e-ed53e062df64
