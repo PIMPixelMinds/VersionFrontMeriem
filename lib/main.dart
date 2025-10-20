@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -28,7 +28,6 @@ import 'view/auth/perso_information_page.dart';
 import 'view/auth/medical_history_page.dart';
 import 'view/auth/primary_caregiver_page.dart';
 import 'view/auth/profile_page.dart';
-import 'view/auth/setup_account_page.dart';
 
 import 'view/appointment/add_appointment.dart';
 import 'view/appointment/appointment_view.dart';
