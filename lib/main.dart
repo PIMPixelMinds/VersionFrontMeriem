@@ -60,7 +60,6 @@ Future<void> _firebaseMessagingBackgroundHandler(final RemoteMessage message) as
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  debugPrint("[BG] Message: ${message.notification?.title} - ${message.notification?.body}");
 }
 
 Future<void> main() async {
