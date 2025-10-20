@@ -54,14 +54,13 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 /// Firebase background handler
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> _firebaseMessagingBackgroundHandler(final RemoteMessage message) async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  debugPrint(
-      "[BG] Message: ${message.notification?.title} - ${message.notification?.body}");
+  debugPrint("[BG] Message: ${message.notification?.title} - ${message.notification?.body}");
 }
 
 Future<void> main() async {
