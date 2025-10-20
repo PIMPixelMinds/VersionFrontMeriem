@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -44,6 +43,7 @@ import 'viewmodel/auth_viewmodel.dart';
 import 'viewmodel/appointment_viewmodel.dart';
 import 'viewmodel/healthTracker_viewmodel.dart';
 import 'viewmodel/medication_viewmodel.dart';
+
 
 /// Global navigator key
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
